@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useState, useEffect } from "react";
 
 const ShoppingContext = createContext();
 
@@ -9,7 +9,33 @@ function ShoppingProvider({ children }) {
    const [shoppingProducts, setShoppingProducts] = useState([])
    const [isCheckoutSideMenu, setIsCheckoutSideMenu] = useState(false);
    const [order, setOrder] = useState([]);
-   
+   const [items, setItems] = useState(null);
+   const [filteredItems, setFilteredItems] = useState(null);
+   const [searchProduct, setSearchProduct] = useState(null);
+   const [searchProductCategory, setSearchProductCategory] = useState(null);
+
+   useEffect(() => {
+      fetch("https://api.escuelajs.co/api/v1/products")
+         .then(response => response.json())
+         .then(data => setItems(data))
+   }, []);
+
+   const filteredItemsSearch = (items, searchProduct) => {
+      return items?.filter((item) => item.title.toLowerCase().includes(searchProduct.toLowerCase()));
+   }
+   const filteredItemsSearchCategory = (items, searchProductCategory) => {
+      return items?.filter((item) => item.category.name.toLowerCase().includes(searchProductCategory.toLowerCase()));
+   }
+
+   useEffect(() => {
+      if (searchProduct && !searchProductCategory) {
+         setFilteredItems(filteredItemsSearch(items, searchProduct));
+      }
+      if (searchProductCategory && !searchProduct) {
+         setFilteredItems(filteredItemsSearchCategory(items, searchProductCategory));
+      }
+   }, [items, searchProduct, searchProductCategory])
+
    return (
       <ShoppingContext.Provider value={{
          count,
@@ -23,7 +49,15 @@ function ShoppingProvider({ children }) {
          isCheckoutSideMenu,
          setIsCheckoutSideMenu,
          order,
-         setOrder
+         setOrder,
+         items,
+         setItems,
+         searchProduct,
+         setSearchProduct,
+         filteredItems,
+         setFilteredItems,
+         searchProductCategory,
+         setSearchProductCategory
       }}>
          {children}
       </ShoppingContext.Provider>
